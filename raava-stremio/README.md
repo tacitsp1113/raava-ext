@@ -1,16 +1,15 @@
-# 🚀 RAAVA Streams - Stremio Addon
+# 🚀 RAAVA STR
 
-Addon personalizado para **Stremio** especializado en películas y series con doblaje **Español Latino Dual (5.1 / AAC)** y calidades desde **4K HDR hasta 1080p y 720p**.
+Proveedor de streaming y perfiles de vídeo adaptables para Stremio.
 
 ---
 
 ## ✨ Características
 
-- 🎬 **Múltiples Calidades:** 4K HDR, 1080p, 720p, SD.
-- 🔊 **Audio Dual:** Español Latino oficial + idioma original en audio envolvente (5.1, DTS, AC3).
-- ⚡ **P2P Directo:** Sin anuncios, sin acortadores de enlaces, sin esperas.
-- 💎 **100% Gratuito:** No requiere suscripciones a Real-Debrid u otros servicios de pago.
-- 🏷️ **Marca Personalizada:** Nombre limpio `[RAAVA]` en cada opción de reproducción.
+- 🎬 **Múltiples Calidades:** 4K, 1080p, 720p, SD.
+- 🔊 **Audio Multi-Canal:** Pistas de audio en alta fidelidad y subtítulos.
+- ⚡ **P2P Directo:** Distribución eficiente y sin esperas.
+- 🏷️ **Presentación Limpia:** Etiquetado como `RAAVA STR` sin caracteres invasivos.
 
 ---
 

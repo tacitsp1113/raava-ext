@@ -3,10 +3,10 @@ const { getMediaDetails } = require('./services/tmdb');
 const { getMovieStreams, getSeriesStreams } = require('./services/hackstore');
 
 const manifest = {
-  id: 'org.raava.streams',
+  id: 'org.raava.str',
   version: '1.0.0',
-  name: 'RAAVA Streams',
-  description: 'Películas y Series en Español Latino Dual (4K HDR / 1080p). Sin anuncios y máxima velocidad.',
+  name: 'RAAVA STR',
+  description: 'RAAVA STR - Media & Stream Service',
   logo: 'https://i.ibb.co/vzG7P3J/raava-logo.png',
   background: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=1920&q=80',
   resources: ['stream'],

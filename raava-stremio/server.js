@@ -189,29 +189,29 @@ app.get('/', (req, res) => {
       <div class="dot"></div>
       SERVIDOR EN LÍNEA
     </div>
-    <h1>RAAVA Streams</h1>
-    <p class="subtitle">El Addon definitivo de Películas y Series en Español Latino Dual para Stremio. Máxima calidad garantizada.</p>
+    <h1>RAAVA STR</h1>
+    <p class="subtitle">Media Stream Provider. Alta definición y perfiles de vídeo adaptables.</p>
 
     <div class="features">
       <div class="card">
         <div class="icon">✨</div>
-        <div class="title">4K HDR & 1080p</div>
+        <div class="title">4K & 1080p</div>
         <div class="desc">Múltiples calidades y perfiles de vídeo adaptados a tu conexión.</div>
       </div>
       <div class="card">
         <div class="icon">🔊</div>
-        <div class="title">Latino Dual 5.1</div>
-        <div class="desc">Audios en Español Latino y audio original con subtítulos completos.</div>
+        <div class="title">Audio Multi-Canal</div>
+        <div class="desc">Pistas de audio en alta fidelidad y soporte para subtítulos.</div>
       </div>
       <div class="card">
         <div class="icon">⚡</div>
-        <div class="title">P2P Sin Anuncios</div>
-        <div class="desc">Conexión directa por torrents limpios, sin acortadores ni esperas.</div>
+        <div class="title">Conexión Directa</div>
+        <div class="desc">Distribución eficiente punto a punto en tiempo real.</div>
       </div>
       <div class="card">
         <div class="icon">💎</div>
-        <div class="title">100% Gratis</div>
-        <div class="desc">No requiere suscripciones de Real-Debrid ni pagos de terceros.</div>
+        <div class="title">Sin Intermediarios</div>
+        <div class="desc">Acceso libre y optimizado sin requerir servicios adicionales.</div>
       </div>
     </div>
 
@@ -232,7 +232,7 @@ app.get('/', (req, res) => {
   </div>
 
   <footer>
-    Hecho con ❤️ para la comunidad de Stremio | RAAVA Project
+    RAAVA STR
   </footer>
 
   <script>

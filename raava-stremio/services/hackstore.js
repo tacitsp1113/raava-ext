@@ -160,12 +160,12 @@ function formatStreamItem(item, magnetData, seedData) {
   }
 
   return {
-    name: `[RAAVA]\n${qualityBadge}`,
-    title: `🎬 ${rawQuality} (${format})\n${seedLabel} | 💾 ${size || 'Descarga directa'} | 🔊 ${lang}\n⚡ P2P Direct Stream`,
+    name: `RAAVA STR\n${qualityBadge}`,
+    title: `🎬 ${rawQuality} (${format})\n${seedLabel} | 💾 ${size || 'Tamaño N/D'} | 🔊 ${lang}\n⚡ P2P Direct Stream`,
     infoHash: magnetData.infoHash,
     sources: magnetData.trackers,
     behaviorHints: {
-      bingeGroup: `raava-${qualityBadge.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
+      bingeGroup: `raava-str-${qualityBadge.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
     }
   };
 }
