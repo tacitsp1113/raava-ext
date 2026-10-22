@@ -1,0 +1,128 @@
+[
+    {
+        "url": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/CinecalidadProvider.cs3",
+        "status": 1,
+        "version": 2,
+        "name": "CinecalidadProvider",
+        "internalName": "CinecalidadProvider",
+        "authors": [
+            "TACIT"
+        ],
+        "description": "Peliculas y series en alta calidad.",
+        "fileSize": 24868,
+        "repositoryUrl": "https://github.com/tacitsp1113/raava-ext",
+        "language": "mx",
+        "tvTypes": [
+            "TvSeries",
+            "Movie"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=cinecalidad.am&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-08f6359cf1dabb995d08bcfa8a5b0dca997bc3ac85c35e2224c751615355120d"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/CuevanaProvider.cs3",
+        "status": 1,
+        "version": 16,
+        "name": "CuevanaProvider",
+        "internalName": "CuevanaProvider",
+        "authors": [
+            "TACIT"
+        ],
+        "description": "La clasica pagina de peliculas y series.",
+        "fileSize": 34634,
+        "repositoryUrl": "https://github.com/tacitsp1113/raava-ext",
+        "language": "mx",
+        "tvTypes": [
+            "TvSeries",
+            "Movie"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=cuevana3.sc&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-3604dc36a1b85bcd8492e772ad41a4597cb253b7fa0183ce2a063ed027fa5117"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/HackstoreProvider.cs3",
+        "status": 1,
+        "version": 7,
+        "name": "HackstoreProvider",
+        "internalName": "HackstoreProvider",
+        "authors": [
+            "TACIT"
+        ],
+        "description": "Pel\u00edculas, Series y Animes en excelente calidad HD y 4K.",
+        "fileSize": 49437,
+        "repositoryUrl": "https://github.com/tacitsp1113/raava-ext",
+        "language": "mx",
+        "tvTypes": [
+            "TvSeries",
+            "Movie",
+            "Anime"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=hackstore2.com&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-74996a36bd5152039fd6edd05677ce4fe1718292227c46e832fd4f46a457633e"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/PelisPlusProvider.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "PelisPlusProvider",
+        "internalName": "PelisPlusProvider",
+        "authors": [
+            "TACIT"
+        ],
+        "description": "Pel\u00edculas y Series en Espa\u00f1ol Latino y Subtitulado HD.",
+        "fileSize": 27713,
+        "repositoryUrl": "https://github.com/tacitsp1113/raava-ext",
+        "language": "mx",
+        "tvTypes": [
+            "TvSeries",
+            "Movie"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=pelisplushd.bz&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-8f86cbd1f0e50ffff81aa31c7837f8206f2a604695335bdd7ffe92bd08cf0204"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/TacitCloudProvider.cs3",
+        "status": 1,
+        "version": 4,
+        "name": "TacitCloudProvider",
+        "internalName": "TacitCloudProvider",
+        "authors": [
+            "TACIT"
+        ],
+        "description": "Servicio de reproduccion en la nube en alta definicion.",
+        "fileSize": 20611,
+        "repositoryUrl": "https://github.com/tacitsp1113/raava-ext",
+        "language": "mx",
+        "tvTypes": [
+            "Movie",
+            "TvSeries"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/main/assets/tacitcloud.jpg",
+        "apiVersion": 1,
+        "fileHash": "sha256-363b4767d03fbd13576872f4e710f9a9b1b4214b6d0ee202e09685497697451d"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/TacitLiveProvider.cs3",
+        "status": 1,
+        "version": 6,
+        "name": "TacitLiveProvider",
+        "internalName": "TacitLiveProvider",
+        "authors": [
+            "TACIT"
+        ],
+        "description": "Deportes y Television en Vivo 24/7 (ESPN, Fox Sports, TUDN, Star+, Azteca 7).",
+        "fileSize": 21890,
+        "repositoryUrl": "https://github.com/tacitsp1113/raava-ext",
+        "language": "mx",
+        "tvTypes": [
+            "Live"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/main/assets/tacitlive.jpg",
+        "apiVersion": 1,
+        "fileHash": "sha256-73d4c5deb63c9dae117555ee51d620cd4dd70d3ed7259c06e179f6b9f733b06d"
+    }
+]
