@@ -1,0 +1,86 @@
+[
+    {
+        "url": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/CinecalidadProvider.cs3",
+        "status": 1,
+        "version": 1,
+        "name": "CinecalidadProvider",
+        "internalName": "CinecalidadProvider",
+        "authors": [
+            "Raava"
+        ],
+        "description": "Peliculas y series en alta calidad.",
+        "fileSize": 18374,
+        "repositoryUrl": "https://github.com/tacitsp1113/raava-ext",
+        "language": "mx",
+        "tvTypes": [
+            "TvSeries",
+            "Movie"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=cinecalidad.am&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-642efd2fa63ebf446542a5775b5b74c4df7c728012218942d167d4c981ca8e10"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/CuevanaProvider.cs3",
+        "status": 1,
+        "version": 15,
+        "name": "CuevanaProvider",
+        "internalName": "CuevanaProvider",
+        "authors": [
+            "Raava"
+        ],
+        "description": "La clasica pagina de peliculas y series.",
+        "fileSize": 28239,
+        "repositoryUrl": "https://github.com/tacitsp1113/raava-ext",
+        "language": "mx",
+        "tvTypes": [
+            "TvSeries",
+            "Movie"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=cuevana3.sc&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-b39e5d8bbd385349191c2e28ff2970e4be4b0332455919d98e57b240dcbb34e4"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/HackstoreProvider.cs3",
+        "status": 1,
+        "version": 6,
+        "name": "HackstoreProvider",
+        "internalName": "HackstoreProvider",
+        "authors": [
+            "Raava"
+        ],
+        "description": "Pel\u00edculas, Series y Animes en excelente calidad HD y 4K.",
+        "fileSize": 43110,
+        "repositoryUrl": "https://github.com/tacitsp1113/raava-ext",
+        "language": "mx",
+        "tvTypes": [
+            "TvSeries",
+            "Movie",
+            "Anime"
+        ],
+        "iconUrl": "https://www.google.com/s2/favicons?domain=hackstore2.com&sz=%size%",
+        "apiVersion": 1,
+        "fileHash": "sha256-1f56bc9285738e66cc20c9815227b053a67a267173315d809b217b1603ab6f35"
+    },
+    {
+        "url": "https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/RaavaLiveProvider.cs3",
+        "status": 1,
+        "version": 4,
+        "name": "RaavaLiveProvider",
+        "internalName": "RaavaLiveProvider",
+        "authors": [
+            "Raava"
+        ],
+        "description": "Deportes y Televisi\u00f3n en Vivo 24/7 (ESPN, Fox Sports, TUDN, Star+, Azteca 7).",
+        "fileSize": 21883,
+        "repositoryUrl": "https://github.com/tacitsp1113/raava-ext",
+        "language": "mx",
+        "tvTypes": [
+            "Live"
+        ],
+        "iconUrl": "https://raw.githubusercontent.com/tacitsp1113/raava-str/main/logo.png",
+        "apiVersion": 1,
+        "fileHash": "sha256-ce700ed541b55c205a40d3c48755cc4392168de7b796a6ffd5e5e7823382ce1b"
+    }
+]
