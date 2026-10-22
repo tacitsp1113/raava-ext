@@ -219,11 +219,15 @@ app.get('/', (req, res) => {
       <a href="${stremioInstallUrl}" class="btn-install">
         🚀 Instalar en Stremio
       </a>
-      <button class="btn-copy" onclick="copyManifest()">📋 Copiar Enlace del Addon</button>
+      <button class="btn-copy" onclick="copyManifest()">📋 Copiar Enlace para Stremio</button>
     </div>
 
     <div class="manifest-box">
-      URL del Manifiesto: <span id="manUrl">${manifestUrl}</span>
+      <strong>URL para pegar en Stremio:</strong><br>
+      <span id="manUrl" style="color: #a78bfa; font-weight: 600;">http://127.0.0.1:${PORT}/manifest.json</span>
+      <p style="margin-top: 8px; color: #94a3b8; font-size: 0.8rem;">
+        💡 <em>Nota para PC:</em> Pega la URL de arriba directamente en la barra <strong>"Buscar complementos"</strong> de Stremio (esquina superior derecha).
+      </p>
     </div>
   </div>
 

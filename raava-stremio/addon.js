@@ -4,14 +4,14 @@ const { getMovieStreams, getSeriesStreams } = require('./services/hackstore');
 
 const manifest = {
   id: 'org.raava.streams',
-  version: '1.0.0',
+  version: '1.1.0',
   name: 'RAAVA Streams',
-  description: 'Películas y Series en Español Latino Dual (4K HDR / 1080p). Streams P2P ultra rápidos sin anuncios.',
+  description: 'Películas y Series en Español Latino Dual (4K HDR / 1080p). Compatible con Stremio y Nuvio. Semillas en tiempo real y sin anuncios.',
   logo: 'https://i.ibb.co/vzG7P3J/raava-logo.png',
   background: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=1920&q=80',
   resources: ['stream'],
-  types: ['movie', 'series'],
-  idPrefixes: ['tt'],
+  types: ['movie', 'series', 'anime'],
+  idPrefixes: ['tt', 'tmdb:'],
   catalogs: [],
   behaviorHints: {
     configurable: false
@@ -24,27 +24,37 @@ builder.defineStreamHandler(async ({ type, id }) => {
   console.log(`[RAAVA Request] Type: ${type}, ID: ${id}`);
 
   try {
-    let imdbId = id;
+    let mediaId = id;
     let season = null;
     let episode = null;
 
-    if (id.includes(':')) {
+    // Support both IMDb format (tt12345:1:2) and Nuvio/TMDB format (tmdb:12345:1:2)
+    if (id.startsWith('tmdb:')) {
       const parts = id.split(':');
-      imdbId = parts[0];
+      mediaId = `tmdb:${parts[1]}`;
+      if (parts.length >= 4) {
+        season = parts[2];
+        episode = parts[3];
+      }
+    } else if (id.includes(':')) {
+      const parts = id.split(':');
+      mediaId = parts[0];
       season = parts[1];
       episode = parts[2];
     }
 
-    const media = await getMediaDetails(type, imdbId);
+    const effectiveType = type === 'anime' ? (season && episode ? 'series' : 'movie') : type;
+
+    const media = await getMediaDetails(effectiveType, mediaId);
     if (!media) {
       console.log(`[RAAVA] Could not resolve media details for ID: ${id}`);
       return { streams: [] };
     }
 
     let streams = [];
-    if (type === 'movie') {
+    if (effectiveType === 'movie') {
       streams = await getMovieStreams(media);
-    } else if (type === 'series' && season && episode) {
+    } else if (effectiveType === 'series' && season && episode) {
       streams = await getSeriesStreams(media, season, episode);
     }
 

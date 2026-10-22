@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { cleanTitle } = require('./tmdb');
+const { scrapeSeeders } = require('./tracker');
 
 const API_BASE = 'https://hackstore2.com/api/rest';
 const HEADERS = {
@@ -139,12 +140,9 @@ function findBestMatch(posts, media) {
 }
 
 /**
- * Formats a download item into a Stremio stream
+ * Formats a download item into a Stremio/Nuvio stream with seeders
  */
-function formatStreamItem(item) {
-  const magnetData = parseMagnet(item.url);
-  if (!magnetData) return null;
-
+function formatStreamItem(item, magnetData, seedData) {
   const rawQuality = item.quality || '1080p';
   let qualityBadge = '1080p';
   if (/4k|2160p|uhd/i.test(rawQuality)) qualityBadge = '4K HDR';
@@ -156,11 +154,19 @@ function formatStreamItem(item) {
   const lang = item.lang ? item.lang.trim() : 'Latino Dual';
   const format = item.format || 'MKV';
 
+  let seedLabel = '👤 Swarm DHT';
+  if (seedData && typeof seedData.seeders === 'number' && seedData.seeders > 0) {
+    seedLabel = `👤 ${seedData.seeders} ${seedData.seeders === 1 ? 'semilla' : 'semillas'}`;
+  }
+
   return {
     name: `[RAAVA]\n${qualityBadge}`,
-    title: `🎬 ${rawQuality} (${format})\n💾 ${size || 'Descarga rápida'} | 🔊 ${lang}\n⚡ P2P Direct Stream`,
+    title: `🎬 ${rawQuality} (${format})\n${seedLabel} | 💾 ${size || 'Descarga directa'} | 🔊 ${lang}\n⚡ P2P Direct Stream`,
     infoHash: magnetData.infoHash,
-    sources: magnetData.trackers
+    sources: magnetData.trackers,
+    behaviorHints: {
+      bingeGroup: `raava-${qualityBadge.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
+    }
   };
 }
 
@@ -177,14 +183,17 @@ async function getMovieStreams(media) {
   if (!matched || !matched._id) return [];
 
   const downloads = await getDownloads(matched._id);
-  const streams = [];
+  const rawTorrents = downloads.filter((dl) => dl.server === 'Utorrent' || (dl.url && dl.url.startsWith('magnet:')));
 
-  for (const dl of downloads) {
-    if (dl.server === 'Utorrent' || (dl.url && dl.url.startsWith('magnet:'))) {
-      const s = formatStreamItem(dl);
-      if (s) streams.push(s);
-    }
-  }
+  const streamPromises = rawTorrents.map(async (dl) => {
+    const magnetData = parseMagnet(dl.url);
+    if (!magnetData) return null;
+    const announceList = magnetData.trackers.map((t) => t.replace('tracker:', ''));
+    const seedData = await scrapeSeeders(magnetData.infoHash, announceList);
+    return formatStreamItem(dl, magnetData, seedData);
+  });
+
+  const streams = (await Promise.all(streamPromises)).filter(Boolean);
 
   // Sort: 4K first, then 1080p, 720p, etc.
   streams.sort((a, b) => {
@@ -228,14 +237,17 @@ async function getSeriesStreams(media, season, episode) {
   if (!matchedEp || !matchedEp._id) return [];
 
   const downloads = await getDownloads(matchedEp._id);
-  const streams = [];
+  const rawTorrents = downloads.filter((dl) => dl.server === 'Utorrent' || (dl.url && dl.url.startsWith('magnet:')));
 
-  for (const dl of downloads) {
-    if (dl.server === 'Utorrent' || (dl.url && dl.url.startsWith('magnet:'))) {
-      const s = formatStreamItem(dl);
-      if (s) streams.push(s);
-    }
-  }
+  const streamPromises = rawTorrents.map(async (dl) => {
+    const magnetData = parseMagnet(dl.url);
+    if (!magnetData) return null;
+    const announceList = magnetData.trackers.map((t) => t.replace('tracker:', ''));
+    const seedData = await scrapeSeeders(magnetData.infoHash, announceList);
+    return formatStreamItem(dl, magnetData, seedData);
+  });
+
+  const streams = (await Promise.all(streamPromises)).filter(Boolean);
 
   streams.sort((a, b) => {
     const qOrder = (str) => {
