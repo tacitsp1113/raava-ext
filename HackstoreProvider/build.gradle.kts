@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 2
+version = 3
 
 android {
     namespace = "com.raava.hackstore"
@@ -7,7 +7,7 @@ android {
 
 cloudstream {
     language = "mx"
-    description = "Películas, Series y Animes en excelente calidad desde Hackstore2."
+    description = "Películas, Series y Animes en excelente calidad HD y 4K."
     authors = listOf("Raava")
 
     /**
@@ -24,5 +24,5 @@ cloudstream {
         "Anime",
     )
 
-    iconUrl = "https://www.google.com/s2/favicons?domain=hackstore2.com&sz=%size%"
+    iconUrl = "https://raw.githubusercontent.com/tacitsp1113/raava-str/main/logo.png"
 }
