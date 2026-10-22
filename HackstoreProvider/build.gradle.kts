@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 3
+version = 4
 
 android {
     namespace = "com.raava.hackstore"
@@ -24,5 +24,6 @@ cloudstream {
         "Anime",
     )
 
-    iconUrl = "https://raw.githubusercontent.com/tacitsp1113/raava-str/main/logo.png"
+    iconUrl = "https://www.google.com/s2/favicons?domain=hackstore2.com&sz=%size%"
 }
+
