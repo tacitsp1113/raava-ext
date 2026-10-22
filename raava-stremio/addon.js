@@ -4,14 +4,14 @@ const { getMovieStreams, getSeriesStreams } = require('./services/hackstore');
 
 const manifest = {
   id: 'org.raava.streams',
-  version: '1.1.0',
+  version: '1.0.0',
   name: 'RAAVA Streams',
-  description: 'Películas y Series en Español Latino Dual (4K HDR / 1080p). Compatible con Stremio y Nuvio. Semillas en tiempo real y sin anuncios.',
+  description: 'Películas y Series en Español Latino Dual (4K HDR / 1080p). Sin anuncios y máxima velocidad.',
   logo: 'https://i.ibb.co/vzG7P3J/raava-logo.png',
   background: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=1920&q=80',
   resources: ['stream'],
-  types: ['movie', 'series', 'anime'],
-  idPrefixes: ['tt', 'tmdb:'],
+  types: ['movie', 'series'],
+  idPrefixes: ['tt'],
   catalogs: [],
   behaviorHints: {
     configurable: false
