@@ -122,7 +122,7 @@ class HackstoreProvider : MainAPI() {
                         }
                     }
                 } ?: emptyList()
-            } catch (e: Throwable) {
+            } catch (_: Throwable) {
                 emptyList()
             }
         }.flatten()
@@ -197,21 +197,34 @@ class HackstoreProvider : MainAPI() {
         val postId = data.trim()
         val playerJson = app.get("$apiUrl/player?post_id=$postId", referer = "$mainUrl/").text
         val playerResponse = parseJson<HackstorePlayerResponse>(playerJson)
+        val items = playerResponse.data ?: return false
 
-        playerResponse.data?.forEach { item ->
-            val link = item.url ?: return@forEach
-            val cleanUrl = fixUrl(link)
+        items.amap { item ->
+            val link = item.url ?: return@amap
+            val cleanUrl = fixUrl(fixHosts(link))
 
-            when {
-                cleanUrl.contains("vimeos.") || cleanUrl.contains("goodstream.") -> {
-                    resolvePackedStream(cleanUrl, subtitleCallback, callback)
+            try {
+                when {
+                    cleanUrl.contains("vimeos.") || cleanUrl.contains("goodstream.") -> {
+                        resolvePackedStream(cleanUrl, subtitleCallback, callback)
+                    }
+                    else -> {
+                        loadExtractor(cleanUrl, mainUrl, subtitleCallback, callback)
+                    }
                 }
-                else -> {
-                    loadExtractor(cleanUrl, mainUrl, subtitleCallback, callback)
-                }
+            } catch (_: Throwable) {
             }
         }
         return true
+    }
+
+    private fun fixHosts(url: String): String {
+        return url
+            .replaceFirst("https://hlswish.com", "https://streamwish.to")
+            .replaceFirst("https://swdyu.com", "https://streamwish.to")
+            .replaceFirst("https://filemoon.sx/d/", "https://filemoon.sx/e/")
+            .replaceFirst("https://filemoon.link", "https://filemoon.sx")
+            .replaceFirst("https://sbthe.com", "https://watchsb.com")
     }
 
     private suspend fun resolvePackedStream(
@@ -235,6 +248,10 @@ class HackstoreProvider : MainAPI() {
                         m3u8
                     ) {
                         this.referer = url
+                        this.headers = mapOf(
+                            "Referer" to url,
+                            "Origin" to "https://${Regex("""https?://([^/]+)""").find(url)?.groupValues?.getOrNull(1) ?: "vimeos.net"}"
+                        )
                         this.type = ExtractorLinkType.M3U8
                     }
                 )
