@@ -228,10 +228,9 @@ class RaavaLiveProvider : MainAPI() {
             plot = "Categoría: ${ev?.category ?: "Deportes"}\nHora: ${ev?.time ?: "En vivo"}\nCalidad: ${ev?.quality ?: "HD"}"
         }
 
-        return newMovieLoadResponse(
+        return newLiveStreamLoadResponse(
             name = title,
             url = url,
-            type = TvType.Live,
             dataUrl = url
         ) {
             this.posterUrl = poster
@@ -296,13 +295,15 @@ class RaavaLiveProvider : MainAPI() {
             else -> "$streamBase/global1.php?stream=$data"
         }
 
-        val streamUrl = resolveStreamUrl(targetUrl)
+        val rawUrl = resolveStreamUrl(targetUrl)
             ?: run {
                 val streamKey = targetUrl.substringAfter("stream=", "")
                 if (streamKey.isNotBlank()) {
                     resolveStreamUrl("https://streamtp99a.sbs/global1.php?stream=$streamKey")
                 } else null
             }
+
+        val streamUrl = rawUrl?.replace(":443/", "/")
 
         if (!streamUrl.isNullOrBlank()) {
             callback.invoke(

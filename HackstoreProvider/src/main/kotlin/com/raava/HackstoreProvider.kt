@@ -13,7 +13,7 @@ class HackstoreProvider : MainAPI() {
     override var mainUrl              = "https://hackstore2.com"
     override var name                 = "Hackstore"
     override val hasMainPage          = true
-    override var lang                 = "es"
+    override var lang                 = "mx"
     override val hasQuickSearch       = false
     override val supportedTypes       = setOf(TvType.Movie, TvType.TvSeries, TvType.Anime)
     override val vpnStatus            = VPNStatus.MightBeNeeded
