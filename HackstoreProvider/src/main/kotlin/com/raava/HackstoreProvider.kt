@@ -1,189 +1,222 @@
-package com.lagradost.cloudstream3.movieproviders
+package com.raava
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.*
-import com.lagradost.cloudstream3.utils.AppUtils.parseJson
-import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.ExtractorLinkType
-import com.lagradost.cloudstream3.utils.Qualities
-import com.lagradost.cloudstream3.utils.getAndUnpack
-import com.lagradost.cloudstream3.utils.loadExtractor
-import com.lagradost.cloudstream3.utils.newExtractorLink
+import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
+import com.lagradost.cloudstream3.utils.*
+import android.util.Log
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 class HackstoreProvider : MainAPI() {
-    override var mainUrl = "https://hackstore2.com"
-    override var name = "Hackstore"
-    override var lang = "mx"
-    override val hasMainPage = true
-    override val hasChromecastSupport = true
-    override val hasDownloadSupport = true
-    override val supportedTypes = setOf(
-        TvType.Movie,
-        TvType.TvSeries,
-        TvType.Anime,
+    override var mainUrl              = "https://hackstore2.com"
+    override var name                 = "Hackstore"
+    override val hasMainPage          = true
+    override var lang                 = "es"
+    override val hasQuickSearch       = false
+    override val supportedTypes       = setOf(TvType.Movie, TvType.TvSeries, TvType.Anime)
+    override val vpnStatus            = VPNStatus.MightBeNeeded
+
+    private val headers = mapOf(
+        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:154.0) Gecko/20100101 Firefox/154.0",
+        "Accept"     to "*/*",
+        "Referer"    to "$mainUrl/"
     )
 
-    private val apiUrl = "$mainUrl/api/rest"
-    private val uploadsUrl = "$mainUrl/wp-content/uploads"
+    private val genresMap = mapOf(
+        24    to "Crimen",
+        25    to "Comedia",
+        26    to "Romance",
+        50    to "Familia",
+        51    to "Fantasía",
+        71    to "Animación",
+        72    to "Aventura",
+        96    to "Acción",
+        114   to "Drama",
+        115   to "Misterio",
+        116   to "Suspense",
+        270   to "Terror",
+        293   to "Ciencia ficción",
+        375   to "Historia",
+        1094  to "Bélica",
+        1184  to "Western",
+        1968  to "Música",
+        2292  to "Película de TV",
+        3118  to "Documental",
+        4178  to "Sci-Fi & Fantasy",
+        4179  to "Action & Adventure",
+        5008  to "Kids",
+        7925  to "War & Politics",
+        11652 to "Reality",
+        18775 to "Soap",
+        45999 to "Talk"
+    )
 
     override val mainPage = mainPageOf(
-        "movies" to "Películas",
-        "tvshows" to "Series",
-        "animes" to "Animes",
+        "${mainUrl}/api/rest/sliders?type=movies&listing=0" to "Películas de estreno",
+        "${mainUrl}/api/rest/listing?post_type=movies"       to "Películas",
+        "${mainUrl}/api/rest/listing?post_type=tvshows"      to "Series",
+        "${mainUrl}/api/rest/listing?post_type=animes"       to "Animes"
     )
 
-    private fun String?.toPoster(): String? {
-        if (this.isNullOrBlank()) return null
-        return when {
-            this.startsWith("http") -> this
-            this.startsWith("/") -> "$uploadsUrl$this"
-            else -> "$uploadsUrl/$this"
-        }
-    }
-
-    private fun String?.toBackdrop(): String? {
-        if (this.isNullOrBlank()) return null
-        return when {
-            this.startsWith("http") -> this
-            this.startsWith("/") -> "$uploadsUrl$this"
-            else -> "$uploadsUrl/$this"
-        }
+    private suspend inline fun <reified T : Any> getJson(url: String): T? {
+        val res  = app.get(url, headers = headers)
+        val text = res.text.trim()
+        if (text.startsWith("<")) return null
+        return AppUtils.tryParseJson<T>(text)
     }
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val postType = request.data
-        val url = "$apiUrl/listing?post_type=$postType&page=$page"
-        val json = app.get(url, referer = "$mainUrl/").text
-        val response = parseJson<HackstoreListingResponse>(json)
-        val posts = response.data?.posts ?: emptyList()
-
-        val home = posts.mapNotNull { item ->
-            val title = item.title ?: return@mapNotNull null
-            val slug = item.slug ?: return@mapNotNull null
-            val id = item.id ?: return@mapNotNull null
-            val type = item.type ?: postType
-            val link = "$mainUrl/$type/$slug?id=$id"
-            val poster = item.images?.poster.toPoster()
-
-            val tvType = when (type) {
-                "movies" -> TvType.Movie
-                "animes" -> TvType.Anime
-                else -> TvType.TvSeries
-            }
-
-            if (tvType == TvType.Movie) {
-                newMovieSearchResponse(title, link, tvType) {
-                    this.posterUrl = poster
-                }
-            } else {
-                newTvSeriesSearchResponse(title, link, tvType) {
-                    this.posterUrl = poster
-                }
-            }
+        val isSlider = request.data.contains("/sliders")
+        val url = if (isSlider) {
+            request.data
+        } else {
+            val sep = if (request.data.contains("?")) "&" else "?"
+            "${request.data}${sep}page=$page"
         }
 
-        if (home.isEmpty() && page == 1) throw ErrorLoadingException()
+        val items = if (isSlider) {
+            getJson<SlidersResponse>(url)?.data?.mapNotNull { it.toSearchResponse() }
+        } else {
+            getJson<ListingResponse>(url)?.data?.posts?.mapNotNull { it.toSearchResponse() }
+        } ?: emptyList()
 
-        val lastPage = response.data?.pagination?.lastPage ?: 1
         return newHomePageResponse(
-            list = HomePageList(name = request.name, list = home),
-            hasNext = page < lastPage
+            list = HomePageList(
+                name               = request.name,
+                list               = items,
+                isHorizontalImages = false
+            ),
+            hasNext = !isSlider && items.isNotEmpty()
         )
     }
 
-    override suspend fun search(query: String): List<SearchResponse> {
-        val types = listOf("movies", "tvshows", "animes")
-        return types.amap { type ->
-            val url = "$apiUrl/search?post_type=$type&query=$query"
-            try {
-                val json = app.get(url, referer = "$mainUrl/").text
-                val response = parseJson<HackstoreSearchResponse>(json)
-                response.data?.posts?.mapNotNull { item ->
-                    val title = item.title ?: return@mapNotNull null
-                    val slug = item.slug ?: return@mapNotNull null
-                    val id = item.id ?: return@mapNotNull null
-                    val itemType = item.type ?: type
-                    val link = "$mainUrl/$itemType/$slug?id=$id"
-                    val poster = item.images?.poster.toPoster()
+    private fun MediaItem.toSearchResponse(): SearchResponse? {
+        val title  = this.title ?: return null
+        val slug   = this.slug ?: return null
+        val type   = this.type ?: "movies"
+        val url    = "$mainUrl/api/rest/single?post_name=$slug&post_type=$type"
+        val poster = images?.poster?.let { "$mainUrl/wp-content/uploads$it" }
+        val score  = rating?.toDoubleOrNull()
+        val year   = releaseDate?.split("-")?.firstOrNull()?.toIntOrNull()
 
-                    val tvType = when (itemType) {
-                        "movies" -> TvType.Movie
-                        "animes" -> TvType.Anime
-                        else -> TvType.TvSeries
-                    }
-
-                    if (tvType == TvType.Movie) {
-                        newMovieSearchResponse(title, link, tvType) {
-                            this.posterUrl = poster
-                        }
-                    } else {
-                        newTvSeriesSearchResponse(title, link, tvType) {
-                            this.posterUrl = poster
-                        }
-                    }
-                } ?: emptyList()
-            } catch (_: Throwable) {
-                emptyList()
+        return when (type) {
+            "animes"  -> newAnimeSearchResponse(title, url, TvType.Anime) {
+                this.posterUrl = poster
+                this.score     = Score.from10(score)
+                this.year      = year
             }
-        }.flatten()
+            "tvshows" -> newTvSeriesSearchResponse(title, url, TvType.TvSeries) {
+                this.posterUrl = poster
+                this.score     = Score.from10(score)
+                this.year      = year
+            }
+            else      -> newMovieSearchResponse(title, url, TvType.Movie) {
+                this.posterUrl = poster
+                this.score     = Score.from10(score)
+                this.year      = year
+            }
+        }
     }
 
-    override suspend fun load(url: String): LoadResponse? {
-        val idFromUrl = Regex("""[?&]id=(\d+)""").find(url)?.groupValues?.getOrNull(1)
+    override suspend fun search(query: String, page: Int): SearchResponseList = coroutineScope {
+        val types = listOf("movies", "tvshows", "animes")
+        val results = types.map { type ->
+            async {
+                getJson<ListingResponse>(
+                    "$mainUrl/api/rest/search?post_type=$type&query=$query&page=$page"
+                )?.data?.posts?.mapNotNull { it.toSearchResponse() } ?: emptyList()
+            }
+        }.awaitAll().flatten()
 
-        val slug = url.substringBefore("?").split("/").lastOrNull { it.isNotBlank() } ?: return null
-        val typeSegment = url.split("/").getOrNull(3) ?: "movies"
-        val postType = when (typeSegment) {
-            "series", "tvshows" -> "tvshows"
-            "animes" -> "animes"
-            else -> "movies"
+        newSearchResponseList(results, hasNext = results.isNotEmpty())
+    }
+
+    override suspend fun quickSearch(query: String): List<SearchResponse>? = search(query)
+
+    override suspend fun load(url: String): LoadResponse? {
+        val apiUrl = if (url.contains("/api/rest/single")) {
+            url
+        } else {
+            val slug = url.trimEnd('/').substringAfterLast('/')
+            val type = when {
+                url.contains("/peliculas") -> "movies"
+                url.contains("/series")    -> "tvshows"
+                url.contains("/animes")    -> "animes"
+                else                       -> "movies"
+            }
+            "$mainUrl/api/rest/single?post_name=$slug&post_type=$type"
         }
 
-        val singleJson = app.get("$apiUrl/single?post_name=$slug&post_type=$postType", referer = "$mainUrl/").text
-        val singleResponse = parseJson<HackstoreSingleResponse>(singleJson)
-        val item = singleResponse.data ?: return null
+        val item = getJson<SingleResponse>(apiUrl)?.data ?: return null
 
-        val id = item.id?.toString() ?: idFromUrl ?: return null
-        val title = item.title ?: item.originalTitle ?: "Sin título"
-        val plot = item.overview?.ifBlank { null }
-        val poster = item.images?.poster.toPoster()
-        val backdrop = item.images?.backdrop.toBackdrop() ?: poster
-        val year = item.releaseDate?.split("-")?.firstOrNull()?.toIntOrNull()
-        val isMovie = (item.type ?: postType) == "movies"
+        val title       = item.title ?: return null
+        val poster      = item.images?.poster?.let { "$mainUrl/wp-content/uploads$it" }
+        val backdrop    = item.images?.backdrop?.let { "$mainUrl/wp-content/uploads$it" }
+        val plot        = item.overview
+        val year        = item.releaseDate?.split("-")?.firstOrNull()?.toIntOrNull()
+        val score       = item.rating?.toDoubleOrNull()
+        val duration    = item.runtime?.toDoubleOrNull()?.toInt()
+        val trailer     = item.trailer?.takeIf { it.isNotBlank() && it != "no" }?.let { "https://www.youtube.com/embed/$it" }
+        val type        = item.type ?: "movies"
+        val tags        = item.genres?.mapNotNull { genresMap[it] }
 
-        return if (isMovie) {
-            newMovieLoadResponse(title, url, TvType.Movie, id) {
-                this.posterUrl = poster
+        val recUrl          = "$mainUrl/api/rest/related?post_id=${item.id}"
+        val recommendations = getJson<SlidersResponse>(recUrl)?.data?.mapNotNull { it.toSearchResponse() }
+
+        if (type == "movies") {
+            val playerUrl = "$mainUrl/api/rest/player?post_id=${item.id}"
+            return newMovieLoadResponse(title, url, TvType.Movie, playerUrl) {
+                this.posterUrl           = poster
                 this.backgroundPosterUrl = backdrop
-                this.plot = plot
-                this.year = year
+                this.plot                = plot
+                this.year                = year
+                this.tags                = tags
+                this.score               = Score.from10(score)
+                this.duration            = duration
+                this.recommendations     = recommendations
+                if (trailer != null) addTrailer(trailer)
+            }
+        }
+
+        val episodes = getJson<EpisodesResponse>(
+            "$mainUrl/api/rest/episodes?post_id=${item.id}"
+        )?.data?.mapNotNull { ep ->
+            val epId = ep.id ?: return@mapNotNull null
+            newEpisode("$mainUrl/api/rest/player?post_id=$epId") {
+                this.name        = ep.title
+                this.season      = ep.seasonNumber
+                this.episode     = ep.episodeNumber
+                this.posterUrl   = ep.stillPath?.let { "https://image.tmdb.org/t/p/w500$it" }
+                this.description = ep.overview
+                this.score       = Score.from10(ep.voteAverage?.toDoubleOrNull())
+                this.runTime     = ep.runtime?.toIntOrNull()
+            }
+        } ?: emptyList()
+
+        return if (type == "animes") {
+            newAnimeLoadResponse(title, url, TvType.Anime) {
+                this.posterUrl           = poster
+                this.backgroundPosterUrl = backdrop
+                this.plot                = plot
+                this.year                = year
+                this.tags                = tags
+                this.score               = Score.from10(score)
+                this.recommendations     = recommendations
+                if (trailer != null) addTrailer(trailer)
+                addEpisodes(DubStatus.Subbed, episodes)
             }
         } else {
-            val tvType = if ((item.type ?: postType) == "animes") TvType.Anime else TvType.TvSeries
-            val epJson = app.get("$apiUrl/episodes?post_id=$id", referer = "$mainUrl/").text
-            val epResponse = parseJson<HackstoreEpisodesResponse>(epJson)
-            val episodes = epResponse.data?.mapNotNull { ep ->
-                val epId = ep.id?.toString() ?: return@mapNotNull null
-                val sNum = ep.seasonNumber ?: 1
-                val eNum = ep.episodeNumber ?: 1
-                val epStill = if (!ep.stillPath.isNullOrBlank()) {
-                    if (ep.stillPath.startsWith("http")) ep.stillPath else "https://image.tmdb.org/t/p/w500${ep.stillPath}"
-                } else null
-
-                newEpisode(epId) {
-                    this.name = ep.title
-                    this.season = sNum
-                    this.episode = eNum
-                    this.posterUrl = epStill
-                    this.description = ep.overview
-                }
-            } ?: emptyList()
-
-            newTvSeriesLoadResponse(title, url, tvType, episodes) {
-                this.posterUrl = poster
+            newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
+                this.posterUrl           = poster
                 this.backgroundPosterUrl = backdrop
-                this.plot = plot
-                this.year = year
+                this.plot                = plot
+                this.year                = year
+                this.tags                = tags
+                this.score               = Score.from10(score)
+                this.recommendations     = recommendations
+                if (trailer != null) addTrailer(trailer)
             }
         }
     }
@@ -194,155 +227,122 @@ class HackstoreProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val postId = data.trim()
-        val playerJson = app.get("$apiUrl/player?post_id=$postId", referer = "$mainUrl/").text
-        val playerResponse = parseJson<HackstorePlayerResponse>(playerJson)
-        val items = playerResponse.data ?: return false
+        val postId = when {
+            data.contains("post_id=") -> data.substringAfter("post_id=").substringBefore("&")
+            else                      -> data
+        }
 
-        items.amap { item ->
-            val link = item.url ?: return@amap
-            val cleanUrl = fixUrl(fixHosts(link))
+        var foundAny = false
 
-            try {
-                when {
-                    cleanUrl.contains("vimeos.") || cleanUrl.contains("goodstream.") -> {
-                        resolvePackedStream(cleanUrl, subtitleCallback, callback)
+        val players = getJson<PlayerResponse>("$mainUrl/api/rest/player?post_id=$postId")?.data
+        Log.d("Hackstore", "Players found: ${players?.size ?: 0}")
+        players?.amap { player ->
+            val link = player.url ?: return@amap
+            Log.d("Hackstore", "Loading player link: $link")
+            if (link.startsWith("http")) {
+                try {
+                    loadExtractor(link, "$mainUrl/", subtitleCallback) { extractorLink ->
+                        foundAny = true
+                        callback(extractorLink)
                     }
-                    else -> {
-                        loadExtractor(cleanUrl, mainUrl, subtitleCallback, callback)
+                } catch (_: Throwable) {
+                }
+            }
+        }
+
+        val downloads = getJson<DownloadsResponse>("$mainUrl/api/rest/downloads?post_id=$postId")?.data
+        Log.d("Hackstore", "Downloads found: ${downloads?.size ?: 0}")
+        downloads?.amap { dl ->
+            val link = dl.url ?: return@amap
+            try {
+                if (link.startsWith("magnet:")) {
+                    callback(
+                        newExtractorLink(
+                            source = name,
+                            name   = "${dl.server ?: name} ${dl.quality ?: ""}".trim(),
+                            url    = link,
+                            type   = ExtractorLinkType.MAGNET
+                        )
+                    )
+                    foundAny = true
+                } else if (link.startsWith("http")) {
+                    loadExtractor(link, "$mainUrl/", subtitleCallback) { extractorLink ->
+                        foundAny = true
+                        callback(extractorLink)
                     }
                 }
             } catch (_: Throwable) {
             }
         }
-        return true
+
+        return foundAny
     }
-
-    private fun fixHosts(url: String): String {
-        return url
-            .replaceFirst("https://hlswish.com", "https://streamwish.to")
-            .replaceFirst("https://swdyu.com", "https://streamwish.to")
-            .replaceFirst("https://filemoon.sx/d/", "https://filemoon.sx/e/")
-            .replaceFirst("https://filemoon.link", "https://filemoon.sx")
-            .replaceFirst("https://sbthe.com", "https://watchsb.com")
-    }
-
-    private suspend fun resolvePackedStream(
-        url: String,
-        subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (ExtractorLink) -> Unit
-    ) {
-        try {
-            val html = app.get(url, referer = "$mainUrl/").text
-            val unpacked = getAndUnpack(html)
-
-            val m3u8 = Regex("""sources:\s*\[\{file:\s*["']([^"']+)["']""").find(unpacked)?.groupValues?.getOrNull(1)
-                ?: Regex("""file:\s*["']([^"']+\.m3u8[^"']*)["']""").find(unpacked)?.groupValues?.getOrNull(1)
-
-            if (!m3u8.isNullOrBlank()) {
-                val hostName = Regex("""https?://([^/]+)""").find(url)?.groupValues?.getOrNull(1) ?: "Stream"
-                callback.invoke(
-                    newExtractorLink(
-                        hostName,
-                        hostName,
-                        m3u8
-                    ) {
-                        this.referer = url
-                        this.headers = mapOf(
-                            "Referer" to url,
-                            "Origin" to "https://${Regex("""https?://([^/]+)""").find(url)?.groupValues?.getOrNull(1) ?: "vimeos.net"}"
-                        )
-                        this.type = ExtractorLinkType.M3U8
-                    }
-                )
-            }
-
-            Regex("""file:\s*["']([^"']+\.vtt)["'],\s*label:\s*["']([^"']+)["']""").findAll(unpacked).forEach { match ->
-                val subUrl = match.groupValues.getOrNull(1) ?: return@forEach
-                val subLang = match.groupValues.getOrNull(2) ?: "Sub"
-                subtitleCallback.invoke(
-                    SubtitleFile(subLang, fixUrl(subUrl))
-                )
-            }
-        } catch (_: Throwable) {
-        }
-    }
-
-    // --- Data Classes ---
-
-    data class HackstoreListingResponse(
-        @JsonProperty("error") val error: Boolean? = null,
-        @JsonProperty("data") val data: HackstoreListingData? = null
-    )
-
-    data class HackstoreListingData(
-        @JsonProperty("posts") val posts: List<HackstorePost>? = null,
-        @JsonProperty("pagination") val pagination: HackstorePagination? = null
-    )
-
-    data class HackstoreSearchResponse(
-        @JsonProperty("error") val error: Boolean? = null,
-        @JsonProperty("data") val data: HackstoreSearchData? = null
-    )
-
-    data class HackstoreSearchData(
-        @JsonProperty("posts") val posts: List<HackstorePost>? = null
-    )
-
-    data class HackstoreSingleResponse(
-        @JsonProperty("error") val error: Boolean? = null,
-        @JsonProperty("data") val data: HackstorePost? = null
-    )
-
-    data class HackstorePost(
-        @JsonProperty("_id") val id: Long? = null,
-        @JsonProperty("title") val title: String? = null,
-        @JsonProperty("overview") val overview: String? = null,
-        @JsonProperty("slug") val slug: String? = null,
-        @JsonProperty("type") val type: String? = null,
-        @JsonProperty("images") val images: HackstoreImages? = null,
-        @JsonProperty("rating") val rating: String? = null,
-        @JsonProperty("release_date") val releaseDate: String? = null,
-        @JsonProperty("original_title") val originalTitle: String? = null,
-        @JsonProperty("runtime") val runtime: String? = null,
-        @JsonProperty("tagline") val tagline: String? = null
-    )
-
-    data class HackstoreImages(
-        @JsonProperty("poster") val poster: String? = null,
-        @JsonProperty("backdrop") val backdrop: String? = null,
-        @JsonProperty("logo") val logo: String? = null
-    )
-
-    data class HackstorePagination(
-        @JsonProperty("current_page") val currentPage: Int? = null,
-        @JsonProperty("last_page") val lastPage: Int? = null,
-        @JsonProperty("total") val total: Int? = null
-    )
-
-    data class HackstoreEpisodesResponse(
-        @JsonProperty("error") val error: Boolean? = null,
-        @JsonProperty("data") val data: List<HackstoreEpisode>? = null
-    )
-
-    data class HackstoreEpisode(
-        @JsonProperty("_id") val id: Long? = null,
-        @JsonProperty("title") val title: String? = null,
-        @JsonProperty("slug") val slug: String? = null,
-        @JsonProperty("overview") val overview: String? = null,
-        @JsonProperty("still_path") val stillPath: String? = null,
-        @JsonProperty("season_number") val seasonNumber: Int? = null,
-        @JsonProperty("episode_number") val episodeNumber: Int? = null
-    )
-
-    data class HackstorePlayerResponse(
-        @JsonProperty("error") val error: Boolean? = null,
-        @JsonProperty("data") val data: List<HackstorePlayerItem>? = null
-    )
-
-    data class HackstorePlayerItem(
-        @JsonProperty("lang") val lang: String? = null,
-        @JsonProperty("quality") val quality: String? = null,
-        @JsonProperty("url") val url: String? = null
-    )
 }
+
+data class MediaItem(
+    @JsonProperty("_id")          val id: Int? = null,
+    @JsonProperty("title")        val title: String? = null,
+    @JsonProperty("overview")     val overview: String? = null,
+    @JsonProperty("slug")         val slug: String? = null,
+    @JsonProperty("images")       val images: MediaImages? = null,
+    @JsonProperty("trailer")      val trailer: String? = null,
+    @JsonProperty("rating")       val rating: String? = null,
+    @JsonProperty("type")         val type: String? = null,
+    @JsonProperty("release_date") val releaseDate: String? = null,
+    @JsonProperty("runtime")      val runtime: String? = null,
+    @JsonProperty("genres")       val genres: List<Int>? = null
+)
+
+data class MediaImages(
+    @JsonProperty("poster")   val poster: String? = null,
+    @JsonProperty("backdrop") val backdrop: String? = null
+)
+
+data class SlidersResponse(
+    @JsonProperty("data") val data: List<MediaItem>? = null
+)
+
+data class ListingResponse(
+    @JsonProperty("data") val data: ListingData? = null
+)
+
+data class ListingData(
+    @JsonProperty("posts") val posts: List<MediaItem>? = null
+)
+
+data class SingleResponse(
+    @JsonProperty("data") val data: MediaItem? = null
+)
+
+data class EpisodeItem(
+    @JsonProperty("_id")            val id: Int? = null,
+    @JsonProperty("title")          val title: String? = null,
+    @JsonProperty("overview")       val overview: String? = null,
+    @JsonProperty("runtime")        val runtime: String? = null,
+    @JsonProperty("still_path")     val stillPath: String? = null,
+    @JsonProperty("vote_average")   val voteAverage: String? = null,
+    @JsonProperty("season_number")  val seasonNumber: Int? = null,
+    @JsonProperty("episode_number") val episodeNumber: Int? = null
+)
+
+data class EpisodesResponse(
+    @JsonProperty("data") val data: List<EpisodeItem>? = null
+)
+
+data class PlayerItem(
+    @JsonProperty("url") val url: String? = null
+)
+
+data class PlayerResponse(
+    @JsonProperty("data") val data: List<PlayerItem>? = null
+)
+
+data class DownloadItem(
+    @JsonProperty("quality") val quality: String? = null,
+    @JsonProperty("url")     val url: String? = null,
+    @JsonProperty("server")  val server: String? = null
+)
+
+data class DownloadsResponse(
+    @JsonProperty("data") val data: List<DownloadItem>? = null
+)

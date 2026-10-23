@@ -9,7 +9,7 @@ import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.newExtractorLink
 
 class RaavaLiveProvider : MainAPI() {
-    override var mainUrl = "https://streamtp-golden1.click"
+    override var mainUrl = "https://streamtp99a.sbs"
     override var name = "RAAVA LIVE"
     override var lang = "mx"
     override val hasMainPage = true
@@ -19,8 +19,8 @@ class RaavaLiveProvider : MainAPI() {
     override val vpnStatus = VPNStatus.None
 
     private val mirrors = listOf(
-        "https://streamtp-golden1.click",
-        "https://streamtp99a.sbs"
+        "https://streamtp99a.sbs",
+        "https://streamtp-golden1.click"
     )
 
     private val streamBase = "https://streamtp99a.sbs"
@@ -228,14 +228,57 @@ class RaavaLiveProvider : MainAPI() {
             plot = "Categoría: ${ev?.category ?: "Deportes"}\nHora: ${ev?.time ?: "En vivo"}\nCalidad: ${ev?.quality ?: "HD"}"
         }
 
-        return newLiveStreamLoadResponse(
+        return newMovieLoadResponse(
             name = title,
             url = url,
+            type = TvType.Live,
             dataUrl = url
         ) {
             this.posterUrl = poster
             this.plot = plot
         }
+    }
+
+    private suspend fun resolveStreamUrl(url: String): String? {
+        var currentUrl = url
+        for (redirectCount in 0..2) {
+            val html = try {
+                app.get(
+                    currentUrl,
+                    headers = mapOf(
+                        "User-Agent" to userAgent,
+                        "Referer" to "$streamBase/"
+                    ),
+                    timeout = 15
+                ).text
+            } catch (_: Exception) {
+                return null
+            }
+
+            val match = Regex("""var\s+playbackURL\s*=\s*["']([^"']+)["']""").find(html)
+            val streamUrl = match?.groups?.get(1)?.value?.replace("\\/", "/")
+            if (!streamUrl.isNullOrBlank()) {
+                return streamUrl
+            }
+
+            // Check if there is a JS redirect: const nuevoDominio = "https://..."
+            val jsDomainMatch = Regex("""(?:const|var|let)\s+nuevoDominio\s*=\s*["']([^"']+)["']""").find(html)
+            if (jsDomainMatch != null) {
+                val nuevoDominio = jsDomainMatch.groups[1]?.value?.trimEnd('/') ?: break
+                val path = currentUrl.substringAfter("://").substringAfter("/", "")
+                currentUrl = "$nuevoDominio/$path"
+                continue
+            }
+
+            val jsRedirectMatch = Regex("""window\.location\.replace\(["']([^"']+)["']\)""").find(html)
+            if (jsRedirectMatch != null) {
+                currentUrl = jsRedirectMatch.groups[1]?.value ?: break
+                continue
+            }
+
+            break
+        }
+        return null
     }
 
     override suspend fun loadLinks(
@@ -244,83 +287,41 @@ class RaavaLiveProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val targetUrl = if (data.startsWith("raava_ch:")) {
-            val streamKey = data.removePrefix("raava_ch:")
-            "$streamBase/global1.php?stream=$streamKey"
-        } else {
-            data
+        val targetUrl = when {
+            data.startsWith("raava_ch:") -> {
+                val streamKey = data.removePrefix("raava_ch:")
+                "$streamBase/global1.php?stream=$streamKey"
+            }
+            data.startsWith("http") -> data
+            else -> "$streamBase/global1.php?stream=$data"
         }
 
-        try {
-            val html = app.get(
-                targetUrl,
-                headers = mapOf(
-                    "User-Agent" to userAgent,
-                    "Referer" to "$mainUrl/"
-                ),
-                timeout = 7
-            ).text
-
-            val match = Regex("""var\s+playbackURL\s*=\s*"([^"]+)"""").find(html)
-            val streamUrl = match?.groups?.get(1)?.value?.replace("\\/", "/")
-
-            if (!streamUrl.isNullOrBlank()) {
-                callback.invoke(
-                    newExtractorLink(
-                        source = this.name,
-                        name = "Señal En Vivo HD",
-                        url = streamUrl,
-                        type = ExtractorLinkType.M3U8
-                    ) {
-                        this.referer = "$streamBase/"
-                        this.quality = Qualities.P1080.value
-                        this.headers = mapOf(
-                            "Referer" to "$streamBase/",
-                            "Origin" to streamBase,
-                            "User-Agent" to userAgent
-                        )
-                    }
-                )
-                return true
+        val streamUrl = resolveStreamUrl(targetUrl)
+            ?: run {
+                val streamKey = targetUrl.substringAfter("stream=", "")
+                if (streamKey.isNotBlank()) {
+                    resolveStreamUrl("https://streamtp99a.sbs/global1.php?stream=$streamKey")
+                } else null
             }
-        } catch (_: Exception) {
-            // Intentar con el mirror alternativo en caso de fallo
-            try {
-                val fallbackUrl = targetUrl.replace(streamBase, mirrors[0])
-                val html = app.get(
-                    fallbackUrl,
-                    headers = mapOf(
-                        "User-Agent" to userAgent,
-                        "Referer" to "${mirrors[0]}/"
-                    ),
-                    timeout = 7
-                ).text
 
-                val match = Regex("""var\s+playbackURL\s*=\s*"([^"]+)"""").find(html)
-                val streamUrl = match?.groups?.get(1)?.value?.replace("\\/", "/")
-
-                if (!streamUrl.isNullOrBlank()) {
-                    callback.invoke(
-                        newExtractorLink(
-                            source = this.name,
-                            name = "Señal En Vivo (Respaldo)",
-                            url = streamUrl,
-                            type = ExtractorLinkType.M3U8
-                        ) {
-                            this.referer = "${mirrors[0]}/"
-                            this.quality = Qualities.P720.value
-                            this.headers = mapOf(
-                                "Referer" to "${mirrors[0]}/",
-                                "Origin" to mirrors[0],
-                                "User-Agent" to userAgent
-                            )
-                        }
+        if (!streamUrl.isNullOrBlank()) {
+            callback.invoke(
+                newExtractorLink(
+                    source = this.name,
+                    name = "Señal En Vivo HD",
+                    url = streamUrl,
+                    type = ExtractorLinkType.M3U8
+                ) {
+                    this.referer = "$streamBase/"
+                    this.quality = Qualities.P1080.value
+                    this.headers = mapOf(
+                        "Referer" to "$streamBase/",
+                        "Origin" to streamBase,
+                        "User-Agent" to userAgent
                     )
-                    return true
                 }
-            } catch (_: Exception) {
-                // Silently ignore fallback failure
-            }
+            )
+            return true
         }
 
         return false
