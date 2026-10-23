@@ -54,17 +54,18 @@ class RaavaLiveProvider : MainAPI() {
         LiveChannel("ch_espn2", "ESPN 2", "espn2", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/espn-2-us.png"),
         LiveChannel("ch_espn3", "ESPN 3", "espn3", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/espn-3-us.png"),
         LiveChannel("ch_espn4", "ESPN 4", "espn4", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/espn-us.png"),
+        LiveChannel("ch_espn5", "ESPN 5", "espn5", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/espn-us.png"),
+        LiveChannel("ch_espn6", "ESPN 6", "espn6", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/espn-us.png"),
+        LiveChannel("ch_espn7", "ESPN 7", "espn7", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/espn-us.png"),
         LiveChannel("ch_espndeportes", "ESPN Deportes", "espndeportes", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/espn-us.png"),
-        LiveChannel("ch_tudn", "TUDN México", "tudnmx", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/mexico/tudn-mx.png"),
-        LiveChannel("ch_tudnus", "TUDN USA", "tudnus", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/mexico/tudn-mx.png"),
+        LiveChannel("ch_tudnus", "TUDN HD", "tudnus", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/mexico/tudn-mx.png"),
         LiveChannel("ch_azteca7", "Azteca 7 (Deportes)", "azteca7", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/mexico/azteca-7-mx.png"),
         LiveChannel("ch_foxsports", "Fox Sports", "fox1ar", "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/argentina/fox-sports-ar.png"),
-        LiveChannel("ch_disney1", "Disney+ / Star+ 1", "disney1", "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80"),
-        LiveChannel("ch_disney2", "Disney+ / Star+ 2", "disney2", "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80"),
-        LiveChannel("ch_disney3", "Disney+ / Star+ 3", "disney3", "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80"),
-        LiveChannel("ch_max1", "TNT Sports / Max 1", "max1", "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?auto=format&fit=crop&w=600&q=80"),
-        LiveChannel("ch_max2", "TNT Sports / Max 2", "max2", "https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?auto=format&fit=crop&w=600&q=80"),
-        LiveChannel("ch_winplus", "Win Sports+ (Colombia)", "winplus", "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80")
+        LiveChannel("ch_winplus", "Win Sports+ (Colombia)", "winplus", "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80"),
+        LiveChannel("ch_winsports", "Win Sports (Colombia)", "winsports", "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80"),
+        LiveChannel("ch_disney1", "Disney+ 1 (En vivo durante partidos)", "disney1", "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80"),
+        LiveChannel("ch_disney2", "Disney+ 2 (En vivo durante partidos)", "disney2", "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80"),
+        LiveChannel("ch_disney3", "Disney+ 3 (En vivo durante partidos)", "disney3", "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80")
     )
 
     override val mainPage = mainPageOf(
@@ -225,7 +226,10 @@ class RaavaLiveProvider : MainAPI() {
             val ev = events.find { it.url == url }
             title = ev?.title ?: "Evento en Vivo"
             poster = getPosterForEvent(ev?.category, ev?.title)
-            plot = "Categoría: ${ev?.category ?: "Deportes"}\nHora: ${ev?.time ?: "En vivo"}\nCalidad: ${ev?.quality ?: "HD"}"
+            val scheduleNote = if (!ev?.time.isNullOrBlank()) {
+                "🕒 Horario programado: ${ev?.time}\nℹ️ Aviso: Los servidores de video activan la señal aproximadamente 15 minutos antes del inicio del evento. Si aún no empieza, el canal puede estar fuera de emisión o mostrar la señal regular del canal emisor.\n\n"
+            } else ""
+            plot = "${scheduleNote}Categoría: ${ev?.category ?: "Deportes"}\nCalidad: ${ev?.quality ?: "HD"}"
         }
 
         return newLiveStreamLoadResponse(
@@ -286,22 +290,33 @@ class RaavaLiveProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val targetUrl = when {
-            data.startsWith("raava_ch:") -> {
-                val streamKey = data.removePrefix("raava_ch:")
-                "$streamBase/global1.php?stream=$streamKey"
-            }
-            data.startsWith("http") -> data
-            else -> "$streamBase/global1.php?stream=$data"
+        val streamKey = when {
+            data.startsWith("raava_ch:") -> data.removePrefix("raava_ch:")
+            data.contains("stream=") -> data.substringAfter("stream=", "").substringBefore("&")
+            data.startsWith("http") -> ""
+            else -> data
         }
 
-        val rawUrl = resolveStreamUrl(targetUrl)
-            ?: run {
-                val streamKey = targetUrl.substringAfter("stream=", "")
-                if (streamKey.isNotBlank()) {
-                    resolveStreamUrl("https://streamtp99a.sbs/global1.php?stream=$streamKey")
-                } else null
+        val candidateUrls = mutableListOf<String>()
+        if (data.startsWith("http")) {
+            candidateUrls.add(data)
+        }
+        if (streamKey.isNotBlank()) {
+            candidateUrls.add("$streamBase/global1.php?stream=$streamKey")
+            candidateUrls.add("https://streamtp99a.sbs/global1.php?stream=$streamKey")
+            // Channel fallbacks
+            if (streamKey == "tudnmx") {
+                candidateUrls.add("$streamBase/global1.php?stream=tudnus")
+            } else if (streamKey == "fox1ar") {
+                candidateUrls.add("$streamBase/global1.php?stream=foxsports")
             }
+        }
+
+        var rawUrl: String? = null
+        for (candidate in candidateUrls) {
+            rawUrl = resolveStreamUrl(candidate)
+            if (!rawUrl.isNullOrBlank()) break
+        }
 
         val streamUrl = rawUrl?.replace(":443/", "/")
 
