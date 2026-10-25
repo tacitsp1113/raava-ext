@@ -10,7 +10,7 @@ import com.lagradost.cloudstream3.utils.newExtractorLink
 class TacitCloudProvider : MainAPI() {
     override var mainUrl = "https://raava-str-1.onrender.com"
     override var name = "TACIT Cloud"
-    override var lang = "es"
+    override var lang = "mx"
     override val hasMainPage = true
     override val hasChromecastSupport = true
     override val hasDownloadSupport = true
