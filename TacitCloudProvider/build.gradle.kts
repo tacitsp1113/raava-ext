@@ -1,5 +1,5 @@
 // use an integer for version numbers
-version = 3
+version = 4
 
 android {
     namespace = "com.tacit.cloud"
@@ -7,7 +7,7 @@ android {
 
 cloudstream {
     language = "mx"
-    description = "Catalogo Cloud Instantaneo de mas de 35,000 Peliculas y Series en 4K y 1080p."
+    description = "Servicio de reproduccion en la nube en alta definicion."
     authors = listOf("TACIT")
 
     status = 1

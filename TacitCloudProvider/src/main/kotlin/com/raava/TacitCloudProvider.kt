@@ -20,8 +20,8 @@ class TacitCloudProvider : MainAPI() {
     )
 
     override val mainPage = mainPageOf(
-        "movie" to "Películas Cloud (35k)",
-        "series" to "Series Cloud"
+        "movie" to "Películas",
+        "series" to "Series"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -134,8 +134,8 @@ class TacitCloudProvider : MainAPI() {
 
             callback.invoke(
                 newExtractorLink(
-                    source = "Yandex Cloud",
-                    name = "Yandex Cloud ${stream.quality}$sizeLabel",
+                    source = "TACIT Cloud",
+                    name = "TACIT Cloud ${stream.quality}$sizeLabel",
                     url = stream.url,
                     type = ExtractorLinkType.VIDEO
                 ) {
