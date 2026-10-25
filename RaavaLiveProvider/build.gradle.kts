@@ -1,5 +1,5 @@
-// use an integer for version numbers
-version = 4
+﻿// use an integer for version numbers
+version = 5
 
 android {
     namespace = "com.raava.live"
@@ -8,7 +8,7 @@ android {
 cloudstream {
     language = "mx"
     description = "Deportes y Televisión en Vivo 24/7 (ESPN, Fox Sports, TUDN, Star+, Azteca 7)."
-    authors = listOf("Raava")
+    authors = listOf("TACIT")
 
     /**
      * Status int as the following:

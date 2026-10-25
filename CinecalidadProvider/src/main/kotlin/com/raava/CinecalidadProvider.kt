@@ -1,4 +1,4 @@
-package com.lagradost.cloudstream3.movieproviders
+﻿package com.lagradost.cloudstream3.movieproviders
 
 import android.util.Log
 import com.lagradost.cloudstream3.*
@@ -168,13 +168,9 @@ class CinecalidadProvider : MainAPI() {
 
 fun fixHostsLinks(url: String): String {
     return url
-        .replaceFirst("https://hglink.to", "https://streamwish.to")
-        .replaceFirst("https://swdyu.com", "https://streamwish.to")
-        .replaceFirst("https://cybervynx.com", "https://streamwish.to")
-        .replaceFirst("https://dumbalag.com", "https://streamwish.to")
-        .replaceFirst("https://mivalyo.com", "https://vidhidepro.com")
-        .replaceFirst("https://dinisglows.com", "https://vidhidepro.com")
-        .replaceFirst("https://dhtpre.com", "https://vidhidepro.com")
+        .replaceFirst(Regex("""https?://(?:www\.)?(?:repacklab\.com|fraudulentwelfare\.com|yodabox\.net|launchprivilege\.com|simpelt\.com|metatube\.cc|bigwarp\.io|audioclip\.net|playvoe\.com|voe-unblock\.com)"""), "https://voe.sx")
+        .replaceFirst(Regex("""https?://(?:www\.)?(?:hglink\.to|swdyu\.com|cybervynx\.com|dumbalag\.com)"""), "https://streamwish.to")
+        .replaceFirst(Regex("""https?://(?:www\.)?(?:mivalyo\.com|dinisglows\.com|dhtpre\.com)"""), "https://vidhidepro.com")
         .replaceFirst("https://filemoon.link", "https://filemoon.sx")
         .replaceFirst("https://sblona.com", "https://watchsb.com")
         .replaceFirst("https://lulu.st", "https://lulustream.com")

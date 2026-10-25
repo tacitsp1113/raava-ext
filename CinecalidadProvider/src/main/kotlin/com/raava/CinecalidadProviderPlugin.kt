@@ -1,4 +1,4 @@
-package com.raava
+﻿package com.raava
 
 import com.lagradost.cloudstream3.plugins.CloudstreamPlugin
 import com.lagradost.cloudstream3.plugins.Plugin
@@ -11,5 +11,6 @@ class CinecalidadProviderPlugin: Plugin() {
         registerMainAPI(CinecalidadProvider())
         registerExtractorAPI(Vimeos())
         registerExtractorAPI(GoodstreamExtractor())
+        registerExtractorAPI(VoeExtractor())
     }
 }

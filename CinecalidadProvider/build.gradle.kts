@@ -1,11 +1,11 @@
-// use an integer for version numbers
-version = 1
+﻿// use an integer for version numbers
+version = 2
 
 cloudstream {
     language = "mx"
 
     description = "Peliculas y series en alta calidad."
-    authors = listOf("Raava")
+    authors = listOf("TACIT")
 
     /**
      * Status int as the following:

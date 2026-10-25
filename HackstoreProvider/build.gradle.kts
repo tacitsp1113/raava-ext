@@ -1,5 +1,5 @@
-// use an integer for version numbers
-version = 6
+﻿// use an integer for version numbers
+version = 7
 
 android {
     namespace = "com.raava.hackstore"
@@ -8,7 +8,7 @@ android {
 cloudstream {
     language = "mx"
     description = "Películas, Series y Animes en excelente calidad HD y 4K."
-    authors = listOf("Raava")
+    authors = listOf("TACIT")
 
     /**
      * Status int as the following:

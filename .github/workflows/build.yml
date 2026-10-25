@@ -1,4 +1,4 @@
-name: Build
+﻿name: Build
 
 # https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#concurrency
 concurrency: 
@@ -54,7 +54,7 @@ jobs:
           ./gradlew make makePluginsJson
           cp **/build/*.cs3 $GITHUB_WORKSPACE/builds
           cp build/plugins.json $GITHUB_WORKSPACE/builds
-          echo '{"name":"Raava","description":"Extensiones de Raava","manifestVersion":1,"iconUrl":"https://raw.githubusercontent.com/tacitsp1113/raava-str/main/logo.png","pluginLists":["https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/plugins.json"]}' > $GITHUB_WORKSPACE/builds/repo.json
+          echo '{"name":"TACIT","description":"Extensiones Oficiales TACIT","manifestVersion":1,"iconUrl":"https://raw.githubusercontent.com/tacitsp1113/raava-str/main/logo.png","pluginLists":["https://raw.githubusercontent.com/tacitsp1113/raava-ext/builds/plugins.json"]}' > $GITHUB_WORKSPACE/builds/repo.json
 
       - name: Push builds
         run: |

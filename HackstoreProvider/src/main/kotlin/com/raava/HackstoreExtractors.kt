@@ -126,3 +126,16 @@ class Hlswish : StreamWishExtractor() {
     override val mainUrl         = "https://hlswish.com"
     override val requiresReferer = true
 }
+
+
+fun fixHostsLinks(url: String): String {
+    return url
+        .replaceFirst(Regex("""https?://(?:www\.)?(?:repacklab\.com|fraudulentwelfare\.com|yodabox\.net|launchprivilege\.com|simpelt\.com|metatube\.cc|bigwarp\.io|audioclip\.net|playvoe\.com|voe-unblock\.com)"""), "https://voe.sx")
+        .replaceFirst(Regex("""https?://(?:www\.)?(?:hglink\.to|swdyu\.com|cybervynx\.com|dumbalag\.com)"""), "https://streamwish.to")
+        .replaceFirst(Regex("""https?://(?:www\.)?(?:mivalyo\.com|dinisglows\.com|dhtpre\.com)"""), "https://vidhidepro.com")
+        .replaceFirst("https://filemoon.link", "https://filemoon.sx")
+        .replaceFirst("https://sblona.com", "https://watchsb.com")
+        .replaceFirst("https://lulu.st", "https://lulustream.com")
+        .replaceFirst("https://uqload.io", "https://uqload.com")
+        .replaceFirst("https://do7go.com", "https://dood.la")
+}

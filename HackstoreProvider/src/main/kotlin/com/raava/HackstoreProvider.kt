@@ -1,4 +1,4 @@
-package com.raava
+﻿package com.raava
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.*
@@ -241,7 +241,8 @@ class HackstoreProvider : MainAPI() {
             Log.d("Hackstore", "Loading player link: $link")
             if (link.startsWith("http")) {
                 try {
-                    loadExtractor(link, "$mainUrl/", subtitleCallback) { extractorLink ->
+                    val fixedLink = fixHostsLinks(link)
+                    loadExtractor(fixedLink, "$mainUrl/", subtitleCallback) { extractorLink ->
                         foundAny = true
                         callback(extractorLink)
                     }
@@ -266,7 +267,8 @@ class HackstoreProvider : MainAPI() {
                     )
                     foundAny = true
                 } else if (link.startsWith("http")) {
-                    loadExtractor(link, "$mainUrl/", subtitleCallback) { extractorLink ->
+                    val fixedLink = fixHostsLinks(link)
+                    loadExtractor(fixedLink, "$mainUrl/", subtitleCallback) { extractorLink ->
                         foundAny = true
                         callback(extractorLink)
                     }
