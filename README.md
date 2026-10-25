@@ -86,5 +86,11 @@ Los binarios generados se ubican en:
 
 ---
 
+## 🤝 Créditos y Agradecimientos
+
+* Lógica de desencriptación e ingeniería inversa referenciada del proyecto comunitario [Droydr13/pluggin-latino](https://github.com/Droydr13/pluggin-latino), pioneros en documentar el algoritmo de desplazamiento de bytes en VOE y la resolución de Embed69.
+
+---
+
 ## 📜 Licencia
 GPL-3.0 / MIT © TACIT EXT
